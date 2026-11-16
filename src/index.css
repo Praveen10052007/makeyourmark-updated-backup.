@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --mym-bg: #121114;
+  --mym-surface: #19181d;
+  --mym-surface-glass: rgba(25, 24, 29, 0.82);
+  --mym-accent: #fb923c;
+  --mym-accent-soft: rgba(251, 146, 60, 0.16);
+  --mym-button-bg: #ea580c;
+  --mym-button-text: #ffffff;
+  --mym-text: #fafafa;
+  --mym-muted: #a1a1aa;
+  --mym-border: rgba(255, 255, 255, 0.1);
+}
+
+@layer base {
+  html,
+  body {
+    background-color: var(--mym-bg);
+    color: var(--mym-text);
+    transition: background-color 0.22s ease, color 0.22s ease;
+  }
+}
+
+.mym-app-shell {
+  background-color: var(--mym-bg);
+  color: var(--mym-text);
+}
+
+.mym-themed-header,
+.mym-themed-footer {
+  background-color: var(--mym-surface-glass) !important;
+  border-color: var(--mym-border) !important;
+}
+
+.mym-themed-accent {
+  color: var(--mym-accent);
+}
+
+.mym-themed-btn {
+  background-color: var(--mym-button-bg);
+  color: var(--mym-button-text);
+}
+
+@media print {
+  header,
+  nav,
+  footer,
+  canvas,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+  #printable-resume {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+}

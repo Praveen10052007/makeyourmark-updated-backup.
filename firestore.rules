@@ -1,0 +1,336 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Reusable Global Primitives ---
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedOwner(userId) {
+      return isSignedIn()
+        && isValidId(userId)
+        && request.auth.uid == userId
+        && request.auth.token.email_verified == true;
+    }
+
+    function hasValidOptionalString(data, key, maxLen) {
+      return !(key in data) || (data[key] is string && data[key].size() <= maxLen);
+    }
+
+    function hasValidOptionalList(data, key, maxItems) {
+      return !(key in data) || (data[key] is list && data[key].size() <= maxItems);
+    }
+
+    // --- Entity Validation Helpers ---
+    function isValidUserAccount(data, userId) {
+      return data.keys().hasAll(['uid', 'name', 'email', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly([
+          'uid', 'name', 'email', 'phone', 'city', 'country', 'college', 'degree',
+          'department', 'departmentCategory', 'interests', 'yearOfStudy', 'graduationYear', 'dreamJob',
+          'preferredLanguage', 'themePreference', 'customThemeId', 'customThemeColors',
+          'currencyPreference', 'dataSaverMode',
+          'profileVisibility', 'saveChatHistory', 'weeklyTargetHours',
+          'currentStreak', 'longestStreak', 'lastCheckInDate', 'totalTasksCompleted',
+          'rewardPoints', 'badges', 'rewardedTaskIds', 'rewardedCheckInDates',
+          'lastInterviewScore', 'knownSkills', 'learningSkills', 'wantToLearnSkills',
+          'bookmarkedVideos', 'savedJobs', 'completedRoadmapNodes',
+          'createdAt', 'updatedAt'
+        ])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 200
+        && hasValidOptionalString(data, 'phone', 40)
+        && hasValidOptionalString(data, 'city', 100)
+        && hasValidOptionalString(data, 'country', 100)
+        && hasValidOptionalString(data, 'college', 200)
+        && hasValidOptionalString(data, 'degree', 150)
+        && hasValidOptionalString(data, 'department', 150)
+        && hasValidOptionalString(data, 'departmentCategory', 120)
+        && hasValidOptionalList(data, 'interests', 30)
+        && (!( 'yearOfStudy' in data ) || data.yearOfStudy in [
+          '1st Year', '2nd Year', '3rd Year', 'Final Year', 'Recent Graduate', 'Working Professional'
+        ])
+        && hasValidOptionalString(data, 'graduationYear', 10)
+        && hasValidOptionalString(data, 'dreamJob', 160)
+        && (!( 'preferredLanguage' in data ) || data.preferredLanguage in ['en', 'ta', 'tanglish', 'hi', 'te', 'ml', 'kn'])
+        && (!( 'themePreference' in data ) || data.themePreference in ['dark', 'light', 'system'])
+        && hasValidOptionalString(data, 'customThemeId', 40)
+        && (!( 'customThemeColors' in data ) || data.customThemeColors is map)
+        && (!( 'currencyPreference' in data ) || data.currencyPreference in ['both', 'inr', 'usd'])
+        && (!( 'dataSaverMode' in data ) || data.dataSaverMode is bool)
+        && (!( 'profileVisibility' in data ) || data.profileVisibility in ['private', 'mentors'])
+        && (!( 'saveChatHistory' in data ) || data.saveChatHistory is bool)
+        && (!( 'weeklyTargetHours' in data ) || (data.weeklyTargetHours is number && data.weeklyTargetHours >= 0 && data.weeklyTargetHours <= 168))
+        && (!( 'currentStreak' in data ) || (data.currentStreak is number && data.currentStreak >= 0 && data.currentStreak <= 10000))
+        && (!( 'longestStreak' in data ) || (data.longestStreak is number && data.longestStreak >= 0 && data.longestStreak <= 10000))
+        && hasValidOptionalString(data, 'lastCheckInDate', 20)
+        && (!( 'totalTasksCompleted' in data ) || (data.totalTasksCompleted is number && data.totalTasksCompleted >= 0 && data.totalTasksCompleted <= 100000))
+        && (!( 'rewardPoints' in data ) || (data.rewardPoints is number && data.rewardPoints >= 0 && data.rewardPoints <= 1000000))
+        && hasValidOptionalList(data, 'badges', 30)
+        && hasValidOptionalList(data, 'rewardedTaskIds', 200)
+        && hasValidOptionalList(data, 'rewardedCheckInDates', 200)
+        && (!( 'lastInterviewScore' in data ) || (data.lastInterviewScore is number && data.lastInterviewScore >= 0 && data.lastInterviewScore <= 100))
+        && hasValidOptionalList(data, 'knownSkills', 60)
+        && hasValidOptionalList(data, 'learningSkills', 60)
+        && hasValidOptionalList(data, 'wantToLearnSkills', 60)
+        && hasValidOptionalList(data, 'bookmarkedVideos', 100)
+        && hasValidOptionalList(data, 'savedJobs', 100)
+        && hasValidOptionalList(data, 'completedRoadmapNodes', 200)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidStudyNote(data, userId, noteId) {
+      return data.keys().hasAll([
+          'id', 'userId', 'title', 'content', 'category', 'isFavorite', 'aiGenerated', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'userId', 'title', 'content', 'category', 'subject',
+          'linkedSkillId', 'linkedSkillName', 'isFavorite', 'aiGenerated',
+          'tags', 'createdAt', 'updatedAt'
+        ])
+        && data.id is string && data.id == noteId && isValidId(data.id)
+        && data.userId is string && data.userId == userId && isValidId(data.userId)
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 200
+        && data.content is string && data.content.size() <= 50000
+        && data.category in [
+          'College Subjects', 'Programming', 'Technical Skills',
+          'Career Preparation', 'Interview Preparation', 'Courses', 'Personal Notes'
+        ]
+        && hasValidOptionalString(data, 'subject', 150)
+        && hasValidOptionalString(data, 'linkedSkillId', 128)
+        && hasValidOptionalString(data, 'linkedSkillName', 160)
+        && data.isFavorite is bool
+        && data.aiGenerated is bool
+        && (!( 'tags' in data ) || (data.tags is list && data.tags.size() <= 20 && (data.tags.size() == 0 || data.tags[0] is string)))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidWeeklyTask(data, userId, taskId) {
+      return data.keys().hasAll([
+          'id', 'userId', 'title', 'dayOfWeek', 'category', 'completed', 'estimatedMinutes', 'priority', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'userId', 'title', 'dayOfWeek', 'category', 'completed',
+          'estimatedMinutes', 'priority', 'deadline', 'notes', 'completedAt', 'createdAt', 'updatedAt'
+        ])
+        && data.id is string && data.id == taskId && isValidId(data.id)
+        && data.userId is string && data.userId == userId && isValidId(data.userId)
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 240
+        && data.dayOfWeek in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        && data.category in ['Coding & DSA', 'Academic & Department', 'Study Schedule', 'Interview Prep', 'Resume & LinkedIn', 'Projects', 'Core CS & System Design']
+        && data.completed is bool
+        && data.estimatedMinutes is number && data.estimatedMinutes >= 5 && data.estimatedMinutes <= 600
+        && data.priority in ['High', 'Medium', 'Low']
+        && hasValidOptionalString(data, 'deadline', 30)
+        && hasValidOptionalString(data, 'notes', 2000)
+        && hasValidOptionalString(data, 'completedAt', 40)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCareerRoadmap(data, userId, roadmapId) {
+      return data.keys().hasAll([
+          'id', 'userId', 'careerTitle', 'careerCategory', 'summary', 'estimatedMonths', 'stages', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'userId', 'careerTitle', 'careerCategory', 'summary',
+          'estimatedMonths', 'stages', 'weeklySchedule', 'monthlyPlan',
+          'createdAt', 'updatedAt'
+        ])
+        && data.id is string && data.id == roadmapId && isValidId(data.id)
+        && data.userId is string && data.userId == userId && isValidId(data.userId)
+        && data.careerTitle is string && data.careerTitle.size() >= 1 && data.careerTitle.size() <= 160
+        && data.careerCategory is string && data.careerCategory.size() >= 1 && data.careerCategory.size() <= 120
+        && data.summary is string && data.summary.size() <= 2000
+        && data.estimatedMonths is number && data.estimatedMonths >= 1 && data.estimatedMonths <= 60
+        && data.stages is list && data.stages.size() <= 12
+        && hasValidOptionalList(data, 'weeklySchedule', 7)
+        && hasValidOptionalList(data, 'monthlyPlan', 12)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidResumeRecord(data, userId, resumeId) {
+      return data.keys().hasAll([
+          'id', 'userId', 'template', 'targetRole', 'personalInfo', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'userId', 'template', 'targetRole', 'personalInfo', 'summary',
+          'experience', 'education', 'projects', 'skills',
+          'certifications', 'achievements', 'languages', 'createdAt', 'updatedAt'
+        ])
+        && data.id is string && data.id == resumeId && isValidId(data.id)
+        && data.userId is string && data.userId == userId && isValidId(data.userId)
+        && data.template in [
+          'ats-classic', 'modern-pro', 'modern-fresher',
+          'software-engineer', 'college-intern', 'experienced-pro'
+        ]
+        && data.targetRole is string && data.targetRole.size() <= 160
+        && data.personalInfo is map
+        && hasValidOptionalString(data, 'summary', 3000)
+        && hasValidOptionalList(data, 'experience', 20)
+        && hasValidOptionalList(data, 'education', 10)
+        && hasValidOptionalList(data, 'projects', 20)
+        && hasValidOptionalList(data, 'skills', 25)
+        && hasValidOptionalList(data, 'certifications', 20)
+        && hasValidOptionalList(data, 'achievements', 20)
+        && hasValidOptionalList(data, 'languages', 15)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // --- Collection Rules ---
+    match /users/{userId} {
+      allow get: if isVerifiedOwner(userId);
+      allow list: if false; // Never allow listing user accounts (PII isolation)
+
+      allow create: if isVerifiedOwner(userId)
+        && isValidUserAccount(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedOwner(userId)
+        && isValidUserAccount(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'name', 'email', 'phone', 'city', 'country', 'college', 'degree',
+          'department', 'departmentCategory', 'interests', 'yearOfStudy', 'graduationYear', 'dreamJob',
+          'preferredLanguage', 'themePreference', 'customThemeId', 'customThemeColors',
+          'currencyPreference', 'dataSaverMode',
+          'profileVisibility', 'saveChatHistory', 'weeklyTargetHours',
+          'currentStreak', 'longestStreak', 'lastCheckInDate', 'totalTasksCompleted',
+          'rewardPoints', 'badges', 'rewardedTaskIds', 'rewardedCheckInDates',
+          'lastInterviewScore', 'knownSkills', 'learningSkills', 'wantToLearnSkills',
+          'bookmarkedVideos', 'savedJobs', 'completedRoadmapNodes', 'updatedAt'
+        ]);
+
+      allow delete: if isVerifiedOwner(userId);
+
+      // Subcollection: Study Notes
+      match /notes/{noteId} {
+        allow get: if isVerifiedOwner(userId) && isValidId(noteId);
+        allow list: if isVerifiedOwner(userId) && resource.data.userId == request.auth.uid;
+
+        allow create: if isVerifiedOwner(userId)
+          && isValidId(noteId)
+          && isValidStudyNote(incoming(), userId, noteId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isVerifiedOwner(userId)
+          && isValidId(noteId)
+          && isValidStudyNote(incoming(), userId, noteId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'content', 'category', 'subject',
+            'linkedSkillId', 'linkedSkillName', 'isFavorite', 'tags', 'updatedAt'
+          ]);
+
+        allow delete: if isVerifiedOwner(userId) && isValidId(noteId);
+      }
+
+      // Subcollection: Weekly Tasks
+      match /tasks/{taskId} {
+        allow get: if isVerifiedOwner(userId) && isValidId(taskId);
+        allow list: if isVerifiedOwner(userId) && resource.data.userId == request.auth.uid;
+
+        allow create: if isVerifiedOwner(userId)
+          && isValidId(taskId)
+          && isValidWeeklyTask(incoming(), userId, taskId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isVerifiedOwner(userId)
+          && isValidId(taskId)
+          && isValidWeeklyTask(incoming(), userId, taskId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'dayOfWeek', 'category', 'completed',
+            'estimatedMinutes', 'priority', 'deadline', 'notes', 'completedAt', 'updatedAt'
+          ]);
+
+        allow delete: if isVerifiedOwner(userId) && isValidId(taskId);
+      }
+
+      // Subcollection: Career Roadmaps
+      match /roadmaps/{roadmapId} {
+        allow get: if isVerifiedOwner(userId) && isValidId(roadmapId);
+        allow list: if isVerifiedOwner(userId) && resource.data.userId == request.auth.uid;
+
+        allow create: if isVerifiedOwner(userId)
+          && isValidId(roadmapId)
+          && isValidCareerRoadmap(incoming(), userId, roadmapId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isVerifiedOwner(userId)
+          && isValidId(roadmapId)
+          && isValidCareerRoadmap(incoming(), userId, roadmapId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'careerTitle', 'careerCategory', 'summary', 'estimatedMonths',
+            'stages', 'weeklySchedule', 'monthlyPlan', 'updatedAt'
+          ]);
+
+        allow delete: if isVerifiedOwner(userId) && isValidId(roadmapId);
+      }
+
+      // Subcollection: Resumes
+      match /resumes/{resumeId} {
+        allow get: if isVerifiedOwner(userId) && isValidId(resumeId);
+        allow list: if isVerifiedOwner(userId) && resource.data.userId == request.auth.uid;
+
+        allow create: if isVerifiedOwner(userId)
+          && isValidId(resumeId)
+          && isValidResumeRecord(incoming(), userId, resumeId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isVerifiedOwner(userId)
+          && isValidId(resumeId)
+          && isValidResumeRecord(incoming(), userId, resumeId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'template', 'targetRole', 'personalInfo', 'summary',
+            'experience', 'education', 'projects', 'skills',
+            'certifications', 'achievements', 'languages', 'updatedAt'
+          ]);
+
+        allow delete: if isVerifiedOwner(userId) && isValidId(resumeId);
+      }
+    }
+  }
+}

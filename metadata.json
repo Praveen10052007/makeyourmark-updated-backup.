@@ -1,0 +1,6 @@
+{
+  "name": "MakeYourMark - Career & Learning Launchpad",
+  "description": "Empower your career with MakeYourMark: AI Tutor, Mock Interview Simulator, Resume Analyzer & Builder, Career Roadmaps, and Job Discovery.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

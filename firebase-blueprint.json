@@ -1,0 +1,429 @@
+{
+  "entities": {
+    "UserAccount": {
+      "title": "UserAccount",
+      "description": "Private user profile, career goals, skills, and learning preferences owned strictly by the authenticated user.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Authenticated Firebase UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 200
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "city": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "country": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "college": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "degree": {
+          "type": "string",
+          "maxLength": 150
+        },
+        "department": {
+          "type": "string",
+          "maxLength": 150
+        },
+        "departmentCategory": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "interests": {
+          "type": "array"
+        },
+        "yearOfStudy": {
+          "type": "string",
+          "enum": ["1st Year", "2nd Year", "3rd Year", "Final Year", "Recent Graduate", "Working Professional"]
+        },
+        "graduationYear": {
+          "type": "string",
+          "maxLength": 10
+        },
+        "dreamJob": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "preferredLanguage": {
+          "type": "string",
+          "enum": ["en", "ta", "tanglish", "hi", "te", "ml", "kn"]
+        },
+        "themePreference": {
+          "type": "string",
+          "enum": ["dark", "light", "system"]
+        },
+        "customThemeId": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "customThemeColors": {
+          "type": "object"
+        },
+        "currencyPreference": {
+          "type": "string",
+          "enum": ["both", "inr", "usd"]
+        },
+        "dataSaverMode": {
+          "type": "boolean"
+        },
+        "profileVisibility": {
+          "type": "string",
+          "enum": ["private", "mentors"]
+        },
+        "saveChatHistory": {
+          "type": "boolean"
+        },
+        "weeklyTargetHours": {
+          "type": "number"
+        },
+        "currentStreak": {
+          "type": "number"
+        },
+        "longestStreak": {
+          "type": "number"
+        },
+        "lastCheckInDate": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "totalTasksCompleted": {
+          "type": "number"
+        },
+        "rewardPoints": {
+          "type": "number"
+        },
+        "badges": {
+          "type": "array"
+        },
+        "rewardedTaskIds": {
+          "type": "array"
+        },
+        "rewardedCheckInDates": {
+          "type": "array"
+        },
+        "lastInterviewScore": {
+          "type": "number"
+        },
+        "knownSkills": {
+          "type": "array"
+        },
+        "learningSkills": {
+          "type": "array"
+        },
+        "wantToLearnSkills": {
+          "type": "array"
+        },
+        "bookmarkedVideos": {
+          "type": "array"
+        },
+        "savedJobs": {
+          "type": "array"
+        },
+        "completedRoadmapNodes": {
+          "type": "array"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "name", "email", "createdAt", "updatedAt"]
+    },
+    "StudyNote": {
+      "title": "StudyNote",
+      "description": "User study note or AI-generated revision summary, optionally linked to a roadmap skill.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "content": {
+          "type": "string",
+          "maxLength": 50000
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "College Subjects",
+            "Programming",
+            "Technical Skills",
+            "Career Preparation",
+            "Interview Preparation",
+            "Courses",
+            "Personal Notes"
+          ]
+        },
+        "subject": {
+          "type": "string",
+          "maxLength": 150
+        },
+        "linkedSkillId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "linkedSkillName": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "isFavorite": {
+          "type": "boolean"
+        },
+        "aiGenerated": {
+          "type": "boolean"
+        },
+        "tags": {
+          "type": "array"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "userId", "title", "content", "category", "isFavorite", "aiGenerated", "createdAt", "updatedAt"]
+    },
+    "WeeklyTaskItem": {
+      "title": "WeeklyTaskItem",
+      "description": "Weekly study or career task tracked by the student.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "dayOfWeek": {
+          "type": "string",
+          "enum": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Coding & DSA", "Academic & Department", "Study Schedule", "Interview Prep", "Resume & LinkedIn", "Projects", "Core CS & System Design"]
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "estimatedMinutes": {
+          "type": "number"
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["High", "Medium", "Low"]
+        },
+        "deadline": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "completedAt": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "userId", "title", "dayOfWeek", "category", "completed", "estimatedMinutes", "priority", "createdAt", "updatedAt"]
+    },
+    "CareerRoadmapPlan": {
+      "title": "CareerRoadmapPlan",
+      "description": "Dynamic personalized career roadmap with stages, skills, statuses, and schedules.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "careerTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "careerCategory": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "estimatedMonths": {
+          "type": "number"
+        },
+        "stages": {
+          "type": "array"
+        },
+        "weeklySchedule": {
+          "type": "array"
+        },
+        "monthlyPlan": {
+          "type": "array"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "userId", "careerTitle", "careerCategory", "summary", "estimatedMonths", "stages", "createdAt", "updatedAt"]
+    },
+    "ResumeRecord": {
+      "title": "ResumeRecord",
+      "description": "User-authored resume draft with selected template and structured sections.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "template": {
+          "type": "string",
+          "enum": ["ats-classic", "modern-pro", "modern-fresher", "software-engineer", "college-intern", "experienced-pro"]
+        },
+        "targetRole": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "personalInfo": {
+          "type": "object"
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 3000
+        },
+        "experience": {
+          "type": "array"
+        },
+        "education": {
+          "type": "array"
+        },
+        "projects": {
+          "type": "array"
+        },
+        "skills": {
+          "type": "array"
+        },
+        "certifications": {
+          "type": "array"
+        },
+        "achievements": {
+          "type": "array"
+        },
+        "languages": {
+          "type": "array"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "userId", "template", "targetRole", "personalInfo", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserAccount" },
+      "description": "Private user account, profile, preferences, and streak metrics."
+    },
+    "/users/{userId}/notes/{noteId}": {
+      "schema": { "$ref": "#/entities/StudyNote" },
+      "description": "Private AI and manual study notes organized by category and linked skills."
+    },
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/WeeklyTaskItem" },
+      "description": "Private weekly study tasks and deadlines."
+    },
+    "/users/{userId}/roadmaps/{roadmapId}": {
+      "schema": { "$ref": "#/entities/CareerRoadmapPlan" },
+      "description": "User's generated career roadmaps and skill completion progress."
+    },
+    "/users/{userId}/resumes/{resumeId}": {
+      "schema": { "$ref": "#/entities/ResumeRecord" },
+      "description": "User's saved resume drafts and templates."
+    }
+  }
+}
